@@ -25,6 +25,7 @@ from .search.router import router as search_router
 from .collab import router as collab_router
 from .integrity.router import router as integrity_router
 from .drone.router import router as drone_router
+from .debug_router import router as debug_router
 
 app = FastAPI(title="TrishulVision Backend")
 
@@ -82,6 +83,7 @@ app.include_router(search_router, prefix="/search", tags=["search"])
 app.include_router(collab_router, prefix="/collab", tags=["collab"])  # annotations
 app.include_router(integrity_router, prefix="/integrity", tags=["integrity"])  # data integrity ledger
 app.include_router(drone_router, prefix="/drone", tags=["drone"])  # drone uploads
+app.include_router(debug_router, prefix="/debug", tags=["debug"])  # debug endpoints
 
 @app.get("/health")
 async def health():
