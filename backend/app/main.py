@@ -30,16 +30,29 @@ app = FastAPI(title="TrishulVision Backend")
 
 # CORS: allow common local dev servers (localhost/127.0.0.1/[::1]) on usual ports
 cors_origins = [
-     "https://trishul-vision-xi.vercel.app",
- 
+    "https://trishul-vision-xi.vercel.app",
 ]
+
+# Support comma-separated FRONTEND_ORIGIN in env (e.g. set multiple allowed origins)
 if settings.FRONTEND_ORIGIN:
-    cors_origins.append(settings.FRONTEND_ORIGIN.rstrip('/'))
+    # split on comma, strip whitespace and trailing slash, ignore empties
+    extra = [o.strip().rstrip('/') for o in str(settings.FRONTEND_ORIGIN).split(',') if o.strip()]
+    cors_origins.extend(extra)
+
+# Deduplicate while preserving order
+seen = set()
+deduped = []
+for o in cors_origins:
+    if o not in seen:
+        seen.add(o)
+        deduped.append(o)
+cors_origins = deduped
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=r"^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d{2,5}$",
+    # allow localhost dev servers, any vercel.app subdomain, and any onrender.com subdomain
+    allow_origin_regex=r"^https?:\\/\\/(localhost|127\\.0\\.0\\.1|\\[::1\\]):\\d{2,5}$|^https?:\\/\\/([A-Za-z0-9-]+\\.)?(vercel\\.app|onrender\\.com)(:\\d{1,5})?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
