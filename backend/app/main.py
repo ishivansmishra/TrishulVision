@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
+from fastapi import Request
 
 from .auth.router import router as auth_router
 from .auth.google_auth import router as google_oauth_router
@@ -55,9 +56,24 @@ allow_origin_regex = r"^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d{2,5}$|^ht
 logging.info("Resolved CORS allow_origins: %s", cors_origins)
 logging.info("Resolved CORS allow_origin_regex: %s", allow_origin_regex)
 
+# If configured to allow everything (debug), bypass strict allowlist
+if settings.ALLOW_ALL_ORIGINS:
+    logging.warning("ALLOW_ALL_ORIGINS is enabled — CORS will be permissive. Disable in production.")
+
+# Optional middleware to log incoming Origin headers for debugging CORS issues
+if settings.DEBUG_CORS_LOGGING:
+    @app.middleware("http")
+    async def log_origins(request: Request, call_next):
+        try:
+            origin = request.headers.get('origin')
+            logging.info("Incoming request origin: %s %s %s", request.method, request.url.path, origin)
+        except Exception:
+            pass
+        return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=([] if settings.ALLOW_ALL_ORIGINS else cors_origins),
     allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
