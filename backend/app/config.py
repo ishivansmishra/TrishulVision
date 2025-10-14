@@ -47,6 +47,15 @@ class Settings(BaseSettings):
     # Optional explicit Google OAuth redirect URI (callback) registered in Google Cloud
     # If not set, defaults to the local development callback below.
     GOOGLE_REDIRECT_URI: str | None = None
+    # When true, the app will log OTP values on SMTP failure (dev only). Defaults to True.
+    LOG_OTP_ON_FAILURE: bool = True
+
+    # If true, allow all origins (*) for CORS. Useful for temporary testing only.
+    # Do NOT enable in production without understanding the security impact.
+    ALLOW_ALL_ORIGINS: bool = False
+
+    # If true, log incoming Origin headers on each request to help debug CORS.
+    DEBUG_CORS_LOGGING: bool = False
     # Allow all origins (temporary debugging only). When True, CORS will allow '*'
     # Note: When allow_credentials=True and allow_origins=['*'] browsers will
     # ignore Access-Control-Allow-Credentials — use cautiously.

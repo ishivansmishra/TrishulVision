@@ -71,14 +71,24 @@ if settings.DEBUG_CORS_LOGGING:
             pass
         return await call_next(request)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=([] if settings.ALLOW_ALL_ORIGINS else cors_origins),
-    allow_origin_regex=allow_origin_regex,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if settings.ALLOW_ALL_ORIGINS:
+    # allow everything
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_origin_regex=allow_origin_regex,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(google_oauth_router, prefix="/auth", tags=["auth"])  # Google OAuth endpoints
