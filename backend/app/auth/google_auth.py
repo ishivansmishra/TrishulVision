@@ -45,6 +45,12 @@ async def google_redirect(request: Request, role: str = "user", redirect: str = 
     else:
         base = str(request.base_url).rstrip('/')
         redirect_uri = f"{base}/auth/google/callback"
+    # Log the redirect URI used so we can diagnose redirect_uri_mismatch errors
+    try:
+        import logging
+        logging.info("Google redirect_uri for auth request: %s", redirect_uri)
+    except Exception:
+        pass
     params = {
         'client_id': client_id,
         'response_type': 'code',
@@ -75,6 +81,11 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
     else:
         base = str(request.base_url).rstrip('/')
         redirect_uri = f"{base}/auth/google/callback"
+    try:
+        import logging
+        logging.info("Google token exchange redirect_uri: %s", redirect_uri)
+    except Exception:
+        pass
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.post(token_url, data={
             'code': code,
@@ -147,6 +158,11 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
             frontend_base = str(settings.FRONTEND_ORIGIN).split(',')[0].strip()
         else:
             frontend_base = request.headers.get('origin') or str(request.base_url).rstrip('/')
+    try:
+        import logging
+        logging.info("Google will redirect back to frontend base: %s", frontend_base)
+    except Exception:
+        pass
     # ensure redirect path starts with '/'
     if not redirect_path.startswith('/'):
         redirect_path = '/' + redirect_path
