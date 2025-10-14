@@ -145,36 +145,7 @@ async def get_heatmap(db = Depends(get_db), limit: int = 1000, metric: str = 'de
         except Exception:
             pass
 
-    # If still no points, optionally provide a deterministic demo fallback so UI can render (dev/demo only)
-    if not out and settings.ALLOW_HEATMAP_DEMO:
-        import math, random
-        random.seed(42)
-        # Demo bbox roughly around Delhi region used elsewhere in stubs
-        min_lng, min_lat, max_lng, max_lat = 77.20, 28.60, 77.30, 28.70
-        n = max(50, min(500, int(limit or 100)))
-        cx = (min_lng + max_lng) / 2.0
-        cy = (min_lat + max_lat) / 2.0
-        for i in range(n):
-            # Sample points with higher density near center
-            u = random.random(); v = random.random()
-            # Box-Muller like radial concentration
-            r = math.sqrt(-2.0 * math.log(max(1e-6, u))) / 6.0  # scale inside bbox
-            theta = 2 * math.pi * v
-            dx = r * math.cos(theta) * (max_lng - min_lng) / 2.0
-            dy = r * math.sin(theta) * (max_lat - min_lat) / 2.0
-            lng = max(min_lng, min(max_lng, cx + dx))
-            lat = max(min_lat, min(max_lat, cy + dy))
-            if metric == 'density':
-                intensity = 1.0
-            elif metric == 'volume':
-                intensity = 10 + 90 * random.random()
-            elif metric == 'violations':
-                intensity = 100.0 if (random.random() < 0.2) else 1.0
-            elif metric == 'depth':
-                intensity = 5 + 20 * random.random()
-            else:
-                intensity = 1.0 + 10 * random.random()
-            out.append({ 'lat': float(lat), 'lng': float(lng), 'intensity': float(intensity) })
+    # Return whatever was found (may be empty). Demo fallbacks removed.
     return out
 
 
@@ -187,9 +158,10 @@ async def get_visualization(job_id: str, db = Depends(get_db)):
 async def get_visualization_vr(job_id: str, db = Depends(get_db)):
     """Return 3D layer descriptors suitable for Cesium/WebXR viewers (stub)."""
     base = await get_visualization(job_id, db)
+    # If you have real tilesets, populate tileset URLs here. Demo tileset removed.
     tileset = {
         'type': '3dtiles',
-        'url': '/tilesets/demo/tileset.json',
+        'url': None,
         'style': { 'color': 'rgba(200,160,120,0.8)' },
     }
     return { **base, 'vr': { 'enabled': True, 'tilesets': [tileset] } }

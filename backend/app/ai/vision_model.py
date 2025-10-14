@@ -11,20 +11,8 @@ except Exception:
     _HAS_SHAPELY = False
 
 def _demo_polygons() -> List[Dict[str, Any]]:
-    # Two squares near a nominal AOI around Delhi (lng/lat)
-    polys = [
-        {
-            "type": "Feature",
-            "geometry": {"type": "Polygon", "coordinates": [[[77.23, 28.62],[77.26, 28.62],[77.26, 28.65],[77.23, 28.65],[77.23, 28.62]]]},
-            "properties": {"area_sqm": 150000, "confidence": 0.82, "model": "demo-opencv"}
-        },
-        {
-            "type": "Feature",
-            "geometry": {"type": "Polygon", "coordinates": [[[77.275, 28.635],[77.285, 28.635],[77.285, 28.645],[77.275, 28.645],[77.275, 28.635]]]},
-            "properties": {"area_sqm": 80000, "confidence": 0.76, "model": "demo-opencv"}
-        },
-    ]
-    return polys
+    # Demo fallback removed: return empty list so production uses real detections only.
+    return []
 
 
 def _ndvi_from_raster(path: str) -> np.ndarray | None:
@@ -87,7 +75,8 @@ def detect_mining(image_path: str) -> List[Dict[str, Any]]:
                 # Bare soil / non-veg proxy: low NDVI
                 mask = ndvi < 0.2
             feats = _polygonize_mask(mask, ds.transform)
-            # If nothing found, fallback to demo polys
-            return feats if feats else _demo_polygons()
+            # If nothing found, return detected features (may be empty). No demo fallbacks.
+            return feats
     except Exception:
-        return _demo_polygons()
+        # On error, return empty list instead of demo polygons
+        return []

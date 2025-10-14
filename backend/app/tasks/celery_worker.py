@@ -103,7 +103,7 @@ def process_mining_report_task(self, report_id: str, path: str):
                 'detections': detections,
                 'estimation': est,
                 'area_ha': 7.2,
-                'location': 'Demo District',
+                'location': None,
                 'tx_hash': tx_hash
             }
         }
