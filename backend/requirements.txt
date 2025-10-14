@@ -8,6 +8,8 @@ python-jose[cryptography]
 celery[redis]
 redis
 aiofiles
+sqlalchemy>=2.0
+aiosqlite
 motor
 pymongo[srv]
 pyjwt
