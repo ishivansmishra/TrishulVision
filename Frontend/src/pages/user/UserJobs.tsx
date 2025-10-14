@@ -60,7 +60,7 @@ export default function UserJobs() {
                   }}>Open Map</Button>
                   <Button size="sm" variant="outline" onClick={async()=>{
                     try {
-                      const r = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/ai/models/jobs/${j.id}/export`, { headers: { ...(localStorage.getItem('auth_token') ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` } : {}) } });
+                      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/ai/models/jobs/${j.id}/export`, { headers: { ...(localStorage.getItem('auth_token') ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` } : {}) } });
                       if (!r.ok) throw new Error(await r.text());
                       const blob = await r.blob();
                       const url = URL.createObjectURL(blob);
