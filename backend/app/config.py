@@ -42,6 +42,11 @@ class Settings(BaseSettings):
 
     # Frontend deployment origin (e.g. https://your-app.vercel.app)
     FRONTEND_ORIGIN: str | None = None
+    # Frontend base URL used for redirects back to the UI (e.g. https://your-app.vercel.app)
+    FRONTEND_BASE: str = "http://localhost:8080"
+    # Optional explicit Google OAuth redirect URI (callback) registered in Google Cloud
+    # If not set, defaults to the local development callback below.
+    GOOGLE_REDIRECT_URI: str | None = None
 
     # Web3 / Blockchain
     WEB3_RPC_URL: str = ""

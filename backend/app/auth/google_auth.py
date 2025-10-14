@@ -39,11 +39,13 @@ async def google_redirect(role: str = "user", redirect: str = "/login"):
     state_payload = {"role": role if role in ("authority", "user") else "user", "redirect": redirect}
     state = base64.urlsafe_b64encode(json.dumps(state_payload).encode()).decode().rstrip("=")
 
+    # Use configured redirect URI if provided (production), otherwise fall back to localhost dev
+    redirect_uri = settings.GOOGLE_REDIRECT_URI or 'http://localhost:8000/auth/google/callback'
     params = {
         'client_id': client_id,
         'response_type': 'code',
         'scope': 'openid email profile',
-        'redirect_uri': 'http://localhost:8000/auth/google/callback',
+        'redirect_uri': redirect_uri,
         'access_type': 'offline',
         'prompt': 'consent',
         'state': state,
@@ -64,7 +66,7 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
 
     # Exchange authorization code for tokens
     token_url = "https://oauth2.googleapis.com/token"
-    redirect_uri = "http://localhost:8000/auth/google/callback"
+    redirect_uri = settings.GOOGLE_REDIRECT_URI or "http://localhost:8000/auth/google/callback"
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.post(token_url, data={
             'code': code,
@@ -128,8 +130,8 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
 
     access_token = auth_utils.create_access_token({"sub": email.lower(), "role": final_role})
 
-    # Redirect back to frontend with token
-    frontend_base = "http://localhost:8080"
+    # Redirect back to frontend with token. Use settings.FRONTEND_BASE in production.
+    frontend_base = settings.FRONTEND_BASE or "http://localhost:8080"
     # ensure redirect path starts with '/'
     if not redirect_path.startswith('/'):
         redirect_path = '/' + redirect_path
