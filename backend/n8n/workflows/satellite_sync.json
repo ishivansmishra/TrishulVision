@@ -1,0 +1,16 @@
+{
+  "name": "Satellite Sync -> Detect",
+  "nodes": [
+    {"parameters": {"rule": {"interval": 6, "unit": "hours"}}, "id": "cron1", "name": "Cron", "type": "n8n-nodes-base.cron", "typeVersion": 1, "position": [260,200]},
+    {"parameters": {"url": "={{$json.sceneUrl}}", "options": {}}, "id": "http1", "name": "Call Detect from URL", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4, "position": [680,200]},
+    {"parameters": {"functionCode": "// Fetch scenes from provider (placeholder)\nreturn [{ json: { sceneUrl: 'https://example.com/demo-scene.tif', notes: 'cron sync' } }];"}, "id": "code1", "name": "Fetch Scenes (stub)", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [460,200]},
+    {"parameters": {"subject": "Satellite scene queued", "text": "Job created for {{$json.sceneUrl}}"}, "id": "notif1", "name": "Notify (email stub)", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [900,200]}
+  ],
+  "connections": {
+    "Cron": {"main": [[{"node": "Fetch Scenes (stub)", "type": "main", "index": 0}]]},
+    "Fetch Scenes (stub)": {"main": [[{"node": "Call Detect from URL", "type": "main", "index": 0}]]},
+    "Call Detect from URL": {"main": [[{"node": "Notify (email stub)", "type": "main", "index": 0}]]}
+  },
+  "settings": {},
+  "meta": {"notes": "Set HTTP Request URL to POST http://localhost:8000/ai/models/detect-from-url with JSON { url: {{$json.sceneUrl}}, notes: {{$json.notes}} }"}
+}

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: trishulvision-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///dev.db
+      - key: MONGO_URL
+        value: mongodb+srv://<user>:<password>@cluster0.yourid.mongodb.net/
+      - key: MONGO_DB_NAME
+        value: trishul
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: FRONTEND_ORIGIN
+        value: https://your-frontend.vercel.app
+      - key: DEV_ADMIN_EMAIL
+        value: admin@example.com
+      - key: DEV_ADMIN_PASSWORD
+        value: admin123
+      - key: DEMO_FALLBACK_PASSWORD
+        value: demo123
+      - key: DEMO_FALLBACK_ROLE
+        value: user

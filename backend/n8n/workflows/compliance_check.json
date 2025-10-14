@@ -1,0 +1,16 @@
+{
+  "name": "Compliance Check on detection.completed",
+  "nodes": [
+    {"parameters": {"path": "trishul-events", "options": {}}, "id": "wh1", "name": "Webhook (events)", "type": "n8n-nodes-base.webhook", "typeVersion": 1, "position": [240,180] },
+    {"parameters": {"functionCode": "const e = $json;\nif (e.event !== 'detection.completed') { return []; }\nreturn [{ json: e.data }];"}, "id": "code1", "name": "Filter detection.completed", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [460,180]},
+    {"parameters": {"url": "http://localhost:8000/gis/shapefiles", "options": {}}, "id": "http1", "name": "Get Boundaries", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4, "position": [680,180]},
+    {"parameters": {"functionCode": "// Compare polygons (placeholder).\n// Normally call backend /mining/illegal/by-boundary\n// Here, trigger Twilio/SendGrid via respective nodes.", "options": {}}, "id": "code2", "name": "Compare & Alert (stub)", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [900,180]}
+  ],
+  "connections": {
+    "Webhook (events)": {"main": [[{"node": "Filter detection.completed", "type": "main", "index": 0}]]},
+    "Filter detection.completed": {"main": [[{"node": "Get Boundaries", "type": "main", "index": 0}]]},
+    "Get Boundaries": {"main": [[{"node": "Compare & Alert (stub)", "type": "main", "index": 0}]]}
+  },
+  "settings": {},
+  "meta": {"notes": "Configure backend to emit to http://localhost:5678/webhook/trishul-events. Add Twilio/SendGrid nodes to send alerts."}
+}

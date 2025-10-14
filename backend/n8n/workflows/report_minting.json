@@ -1,0 +1,16 @@
+{
+  "name": "Report Minting on report.pinned",
+  "nodes": [
+    {"parameters": {"path": "trishul-events", "options": {}}, "id": "wh1", "name": "Webhook (events)", "type": "n8n-nodes-base.webhook", "typeVersion": 1, "position": [240,300] },
+    {"parameters": {"functionCode": "const e = $json;\nif (e.event !== 'report.pinned') { return []; }\nreturn [{ json: e.data }];"}, "id": "code1", "name": "Filter report.pinned", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [460,300]},
+    {"parameters": {"url": "http://localhost:8000/blockchain/mint-nft", "options": {"method": "POST", "bodyParameters": {"parameters": [{"name": "report_id", "value": "={{$json.report_id}}"}]}}}, "id": "http1", "name": "Mint NFT (backend)", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4, "position": [700,300]},
+    {"parameters": {"url": "http://localhost:8000/blockchain/callback", "options": {"method": "POST", "headers": {"parameters": [{"name": "X-N8N-Secret", "value": "={{$env.N8N_INBOUND_SECRET}}"}]}}}, "id": "http2", "name": "Callback (ack)", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4, "position": [920,300]}
+  ],
+  "connections": {
+    "Webhook (events)": {"main": [[{"node": "Filter report.pinned", "type": "main", "index": 0}]]},
+    "Filter report.pinned": {"main": [[{"node": "Mint NFT (backend)", "type": "main", "index": 0}]]},
+    "Mint NFT (backend)": {"main": [[{"node": "Callback (ack)", "type": "main", "index": 0}]]}
+  },
+  "settings": {},
+  "meta": {"notes": "Replace mint step with on-chain mint if desired. Use secrets for headers."}
+}

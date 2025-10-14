@@ -1,0 +1,145 @@
+# -------- Root Git Ignore for TrishulVision --------
+# This complements Frontend/.gitignore (which is kept for local tooling specificity)
+# Backend (Python / FastAPI / Celery / Alembic)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.dylib
+*.egg-info/
+.eggs/
+.build/
+.python-version
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+.tox/
+.env
+.env.*
+.venv/
+venv/
+ENV/
+env/
+# Uvicorn / Gunicorn logs
+uvicorn*.log
+# Alembic
+alembic/versions/*.pyc
+# Local sqlite or temp dbs
+*.db
+*.sqlite3
+/tmp/
+# Celery / task queues
+celerybeat-schedule
+celerybeat.pid
+*.pid
+# Model / data artifacts (adjust if some should be tracked)
+models/
+artifacts/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
+# Large geospatial / temp data staging (consider using git-lfs or storage bucket)
+*.tif
+*.tiff
+*.geotiff
+*.jp2
+*.hdf
+*.nc
+*.safe
+*.zip
+*.tar
+*.tar.gz
+*.7z
+# If some sample geotiff needed, whitelist with !path/file.tif
+
+# Reports generated
+reports/output/
+reports/generated/
+
+# Logs & runtime
+logs/
+*.log
+*.out
+*.err
+nohup.out
+
+# IDE / Editor
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Node / Frontend (global patterns; Frontend/.gitignore already narrows further)
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+bower_components/
+
+# Builds and bundles
+build/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Vite / Temp
+*.local
+vite.config.timestamp-* 
+
+# Bun
+bun.lockb
+.bun
+
+# Tailwind / PostCSS caches
+*.css.map
+
+# Environment / secrets (never commit real secrets)
+.secrets*/
+secret*.json
+*.pem
+*.key
+*.crt
+
+# Python compiled
+*.pyd
+
+# IPFS temp (adjust if you keep a pinned dataset directory)
+ipfs-temp/
+
+# n8n ephemeral data
+n8n/.cache/
+n8n/.temp/
+
+# Misc
+*.tmp
+*.bak
+*.orig
+
+# Local test scripts (prefix with tmp_ per existing pattern)
+backend/tmp_*.py
+
+# Allow README and necessary config files in otherwise ignored dirs
+!**/README.md
+
+# End of file
