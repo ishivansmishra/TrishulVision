@@ -30,6 +30,7 @@ app = FastAPI(title="TrishulVision Backend")
 
 # CORS: allow common local dev servers (localhost/127.0.0.1/[::1]) on usual ports
 cors_origins = [
+     "https://trishul-vision-xi.vercel.app",
     "http://localhost:3000",
     "http://localhost:8080",
     "http://localhost:5173",
