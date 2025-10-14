@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -136,5 +137,12 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
     }
+
+    # Validators to trim accidental surrounding whitespace from sensitive/URL fields
+    @field_validator('SMTP_USER', 'SMTP_PASSWORD', 'SMTP_FROM', 'FRONTEND_BASE', 'GOOGLE_REDIRECT_URI', 'FRONTEND_ORIGIN', mode='before')
+    def _strip_strings(cls, v):
+        if isinstance(v, str):
+            return v.strip()
+        return v
 
 settings = Settings()
