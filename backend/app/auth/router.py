@@ -99,6 +99,21 @@ async def send_otp(data: OtpSendIn, db = Depends(get_db)):
         otp = send_otp(data.email)
     except Exception as e:
         logging.exception("Failed to send OTP via SMTP: %s", e)
+        # If the exception contains a DEV_OTP (populated when LOG_OTP_ON_FAILURE
+        # is true), surface it to the frontend to make developer testing easier.
+        msg = str(e)
+        dev_otp = None
+        if getattr(settings, 'LOG_OTP_ON_FAILURE', True) and msg and 'DEV_OTP:' in msg:
+            try:
+                dev_otp = msg.split('DEV_OTP:')[-1].strip()
+            except Exception:
+                dev_otp = None
+        if dev_otp:
+            # persist OTP with expiry (5 minutes) even when SMTP failed
+            expires_at = datetime.utcnow() + timedelta(minutes=5)
+            otps = db.get_collection("otp_tokens")
+            await otps.insert_one({"email": data.email, "otp": dev_otp, "expires_at": expires_at})
+            return {"status": "otp_sent", "otp": dev_otp, "note": "SMTP failed; OTP provided for dev/testing"}
         # Surface a 502 to frontend so it can show a useful message.
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to send OTP email")
     # persist OTP with expiry (5 minutes)
