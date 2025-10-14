@@ -33,4 +33,6 @@ def send_otp(email: str) -> str:
         logging.warning("SMTP error while sending OTP to %s: %s", email, e)
         if getattr(settings, 'LOG_OTP_ON_FAILURE', True):
             logging.info("OTP for %s: %s", email, otp)
+        # surface the exception to caller so the HTTP route can return a 5xx/4xx
+        raise
     return otp

@@ -95,7 +95,12 @@ class OtpSendIn(BaseModel):
 async def send_otp(data: OtpSendIn, db = Depends(get_db)):
     data.email = data.email.strip().lower()
     from .smtp_otp import send_otp
-    otp = send_otp(data.email)
+    try:
+        otp = send_otp(data.email)
+    except Exception as e:
+        logging.exception("Failed to send OTP via SMTP: %s", e)
+        # Surface a 502 to frontend so it can show a useful message.
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to send OTP email")
     # persist OTP with expiry (5 minutes)
     expires_at = datetime.utcnow() + timedelta(minutes=5)
     otps = db.get_collection("otp_tokens")

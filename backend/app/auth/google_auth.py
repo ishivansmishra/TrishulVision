@@ -29,7 +29,7 @@ router = APIRouter()
 
 
 @router.get('/google/redirect')
-async def google_redirect(role: str = "user", redirect: str = "/login"):
+async def google_redirect(request: Request, role: str = "user", redirect: str = "/login"):
     client_id = settings.GOOGLE_CLIENT_ID
     if not client_id:
         return {"status": "error", "note": "google client id not configured"}
@@ -39,8 +39,12 @@ async def google_redirect(role: str = "user", redirect: str = "/login"):
     state_payload = {"role": role if role in ("authority", "user") else "user", "redirect": redirect}
     state = base64.urlsafe_b64encode(json.dumps(state_payload).encode()).decode().rstrip("=")
 
-    # Use configured redirect URI if provided (production), otherwise fall back to localhost dev
-    redirect_uri = settings.GOOGLE_REDIRECT_URI or 'http://localhost:8000/auth/google/callback'
+    # Use configured redirect URI if provided (production), otherwise derive from request base
+    if settings.GOOGLE_REDIRECT_URI:
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
+    else:
+        base = str(request.base_url).rstrip('/')
+        redirect_uri = f"{base}/auth/google/callback"
     params = {
         'client_id': client_id,
         'response_type': 'code',
@@ -66,7 +70,11 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
 
     # Exchange authorization code for tokens
     token_url = "https://oauth2.googleapis.com/token"
-    redirect_uri = settings.GOOGLE_REDIRECT_URI or "http://localhost:8000/auth/google/callback"
+    if settings.GOOGLE_REDIRECT_URI:
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
+    else:
+        base = str(request.base_url).rstrip('/')
+        redirect_uri = f"{base}/auth/google/callback"
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.post(token_url, data={
             'code': code,
@@ -131,7 +139,14 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
     access_token = auth_utils.create_access_token({"sub": email.lower(), "role": final_role})
 
     # Redirect back to frontend with token. Use settings.FRONTEND_BASE in production.
-    frontend_base = settings.FRONTEND_BASE or "http://localhost:8080"
+    if settings.FRONTEND_BASE:
+        frontend_base = settings.FRONTEND_BASE
+    else:
+        # Prefer configured FRONTEND_ORIGIN if set, otherwise fall back to request Origin or base
+        if settings.FRONTEND_ORIGIN:
+            frontend_base = str(settings.FRONTEND_ORIGIN).split(',')[0].strip()
+        else:
+            frontend_base = request.headers.get('origin') or str(request.base_url).rstrip('/')
     # ensure redirect path starts with '/'
     if not redirect_path.startswith('/'):
         redirect_path = '/' + redirect_path
