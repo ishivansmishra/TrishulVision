@@ -20,6 +20,17 @@ import httpx
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse, JSONResponse
 from jose import jwt
+import logging
+
+# Try to import Google's token verification helper. If unavailable, we'll
+# fall back to unverified claims but log a warning. In production, ensure
+# `google-auth` is installed so tokens are verified.
+try:
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+    _HAS_GOOGLE_AUTH = True
+except Exception:
+    _HAS_GOOGLE_AUTH = False
 
 from ..config import settings
 from ..mongo import get_db
@@ -102,14 +113,29 @@ async def google_callback(request: Request, code: Optional[str] = None, state: O
     if not id_token:
         return JSONResponse({"status": "error", "detail": "no id_token"}, status_code=400)
 
-    # Decode the ID token. For local/dev, skip signature verification.
-    try:
-        payload = jwt.get_unverified_claims(id_token)
-    except Exception:
+    # Verify the ID token signature and audience when possible. In production
+    # this should always run. If google-auth isn't installed, fall back to
+    # extracting unverified claims but log a warning.
+    payload = None
+    if _HAS_GOOGLE_AUTH:
         try:
-            payload = jwt.decode(id_token, options={"verify_signature": False, "verify_aud": False})
-        except Exception:
+            # Verify and decode token; will raise ValueError on failure
+            request_adapter = google_requests.Request()
+            # audience should be our client id
+            audience = client_id
+            payload = google_id_token.verify_oauth2_token(id_token, request_adapter, audience)
+        except Exception as e:
+            logging.exception("Google ID token verification failed: %s", e)
             return JSONResponse({"status": "error", "detail": "invalid id_token"}, status_code=400)
+    else:
+        logging.warning("google-auth not installed; decoding ID tokens without verification (dev only)")
+        try:
+            payload = jwt.get_unverified_claims(id_token)
+        except Exception:
+            try:
+                payload = jwt.decode(id_token, options={"verify_signature": False, "verify_aud": False})
+            except Exception:
+                return JSONResponse({"status": "error", "detail": "invalid id_token"}, status_code=400)
 
     email = (payload or {}).get('email')
     if not email:

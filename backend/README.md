@@ -177,3 +177,18 @@ Returns a WMTS template with curated layers and a friendly name mapping:
 	"friendly": { "VIIRS_SNPP_CorrectedReflectance_TrueColor": "VIIRS True Color (SNPP)", ... }
 }
 ```
+
+## Google OAuth (Production)
+
+This project includes a minimal Google OAuth flow under `/auth/google`. For production use follow these steps:
+
+- Create OAuth 2.0 credentials in Google Cloud Console. Set the Authorized redirect URI to `https://your-domain.com/auth/google/callback` (or the `GOOGLE_REDIRECT_URI` you will set).
+- Populate `backend/.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+- Optionally set `GOOGLE_REDIRECT_URI` if you want an explicit callback URL instead of automatic derivation.
+- Set `FRONTEND_BASE` to your frontend's base URL (e.g. `https://app.example.com`) so the backend redirects back after login.
+
+Security notes:
+
+- Ensure `google-auth` is installed (it's included in `requirements.txt` added recently) to verify ID tokens server-side.
+- In production, do not rely on unverified ID token decoding — ensure tokens are verified and audience matches `GOOGLE_CLIENT_ID`.
+

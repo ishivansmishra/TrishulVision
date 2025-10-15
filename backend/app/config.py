@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
+    # Toggle debug features; default False in production
+    DEBUG: bool = False
+
+    # Comma-separated list of allowed hosts (for informational logging / checks)
+    ALLOWED_HOSTS: str | None = None
+
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/trishul"
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -57,15 +63,6 @@ class Settings(BaseSettings):
 
     # If true, log incoming Origin headers on each request to help debug CORS.
     DEBUG_CORS_LOGGING: bool = False
-    # Allow all origins (temporary debugging only). When True, CORS will allow '*'
-    # Note: When allow_credentials=True and allow_origins=['*'] browsers will
-    # ignore Access-Control-Allow-Credentials — use cautiously.
-    ALLOW_ALL_ORIGINS: bool = False
-    # Enable verbose logging of incoming Origin headers (helps debug CORS issues)
-    DEBUG_CORS_LOGGING: bool = False
-
-    # For dev convenience: when SMTP fails, optionally log the OTP to server logs
-    LOG_OTP_ON_FAILURE: bool = True
 
     # Web3 / Blockchain
     WEB3_RPC_URL: str = ""

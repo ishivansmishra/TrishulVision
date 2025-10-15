@@ -30,6 +30,23 @@ from .debug_router import router as debug_router
 
 app = FastAPI(title="TrishulVision Backend")
 
+
+# Security headers middleware (basic protective headers)
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    try:
+        # Enforce HTTPS in browsers (set long max-age; only meaningful over TLS)
+        response.headers.setdefault('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('X-Frame-Options', 'DENY')
+        response.headers.setdefault('Referrer-Policy', 'no-referrer-when-downgrade')
+        # Minimal CSP: block inline scripts/styles by default; adjust for your frontend as needed
+        response.headers.setdefault('Content-Security-Policy', "default-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:;")
+    except Exception:
+        pass
+    return response
+
 # CORS: allow common local dev servers (localhost/127.0.0.1/[::1]) on usual ports
 cors_origins = [
     "https://trishul-vision27.vercel.app",
@@ -109,7 +126,26 @@ app.include_router(search_router, prefix="/search", tags=["search"])
 app.include_router(collab_router, prefix="/collab", tags=["collab"])  # annotations
 app.include_router(integrity_router, prefix="/integrity", tags=["integrity"])  # data integrity ledger
 app.include_router(drone_router, prefix="/drone", tags=["drone"])  # drone uploads
-app.include_router(debug_router, prefix="/debug", tags=["debug"])  # debug endpoints
+# Only include debug endpoints when DEBUG is enabled
+if settings.DEBUG:
+    app.include_router(debug_router, prefix="/debug", tags=["debug"])  # debug endpoints
+
+
+@app.on_event("startup")
+async def production_startup_checks():
+    # Warn if critical env vars for OAuth are missing when running in non-debug (production) mode.
+    try:
+        if not settings.DEBUG:
+            missing = []
+            if not settings.GOOGLE_CLIENT_ID:
+                missing.append('GOOGLE_CLIENT_ID')
+            if not settings.GOOGLE_CLIENT_SECRET:
+                missing.append('GOOGLE_CLIENT_SECRET')
+            if missing:
+                import logging
+                logging.warning("Missing critical environment variables in production: %s", ",".join(missing))
+    except Exception:
+        pass
 
 @app.get("/health")
 async def health():
